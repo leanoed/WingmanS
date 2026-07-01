@@ -47,7 +47,7 @@ export async function getUserTicketCount(guildId, userId) {
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'getUserTicketCount',
-      message: 'Ticket operation failed: getUserTicketCount',
+      message: 'Request operation failed: getUserTicketCount',
       userMessage: 'Failed to count open tickets.',
       context: { guildId, userId }
     });
