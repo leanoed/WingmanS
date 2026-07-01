@@ -153,7 +153,7 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     const priorityInfo = PRIORITY_MAP[priority] || PRIORITY_MAP.none;
     
     const embed = createEmbed({
-      title: `Ticket #${ticketNumber}`,
+      title: `Request #${ticketNumber}`,
       description: `${member.toString()}, thanks for your request!\n\n**Text:**\n${reason}\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
       color: priorityInfo.color,
       fields: [
@@ -346,7 +346,7 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
+      m.embeds[0].title?.startsWith('Request #')
     );
     
     if (ticketMessage) {
@@ -458,7 +458,7 @@ export async function claimTicket(channel, claimer) {
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
+      m.embeds[0].title?.startsWith('Request #')
     );
     
     if (ticketMessage) {
@@ -603,7 +603,7 @@ export async function reopenTicket(channel, reopener) {
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
+      m.embeds[0].title?.startsWith('Request #')
     );
     
     if (ticketMessage) {
@@ -968,7 +968,7 @@ export async function unclaimTicket(channel, unclaimer) {
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
+      m.embeds[0].title?.startsWith('Request #')
     );
     
     if (ticketMessage) {
@@ -1094,7 +1094,7 @@ export async function updateTicketPriority(channel, priority, updater) {
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
+      m.embeds[0].title?.startsWith('Request #')
     );
     
     if (ticketMessage) {
