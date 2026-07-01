@@ -381,7 +381,7 @@ components: []
     const controlRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('ticket_reopen')
-        .setLabel('Reopen Ticket')
+        .setLabel('Reopen Request')
         .setStyle(ButtonStyle.Success)
         .setEmoji('🔓'),
       new ButtonBuilder()
@@ -578,7 +578,7 @@ export async function reopenTicket(channel, reopener) {
           movedToOpenCategory = true;
         } catch (moveError) {
           openCategoryMoveFailed = true;
-          logger.warn(`Could not move reopened ticket ${channel.id} to open category ${openCategoryId}: ${moveError.message}`);
+          logger.warn(`Could not move reopened request ${channel.id} to open category ${openCategoryId}: ${moveError.message}`);
         }
       } else {
         openCategoryMoveFailed = true;
@@ -623,8 +623,8 @@ export async function reopenTicket(channel, reopener) {
     }
     
     const reopenEmbed = createEmbed({
-      title: 'Ticket Reopened',
-      description: `🔓 ${reopener} has reopened this ticket!`,
+      title: 'Request Reopened',
+      description: `🔓 ${reopener} has reopened this request!`,
       color: '#2ecc71'
     });
 
