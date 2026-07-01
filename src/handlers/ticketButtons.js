@@ -106,7 +106,7 @@ const createTicketHandler = {
       const rateLimitKey = `${interaction.user.id}:create_ticket`;
       const allowed = await checkRateLimit(rateLimitKey, 3, 60000);
       if (!allowed) {
-        await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'You are creating tickets too quickly. Please wait a minute and try again.' });
+        await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'You are creating orders too quickly. Please wait a minute and try again.' });
         return;
       }
 
@@ -117,7 +117,7 @@ const createTicketHandler = {
       const currentTicketCount = await getUserTicketCount(interaction.guildId, interaction.user.id);
       
       if (currentTicketCount >= maxTicketsPerUser) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `You have reached the maximum number of open tickets (${maxTicketsPerUser}).\n\nPlease close your existing tickets before creating a new one.\n\n**Current Tickets:** ${currentTicketCount}/${maxTicketsPerUser}` });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `You have reached the maximum number of open tickets (${maxTicketsPerUser}).\n\nPlease close your existing orders before creating a new one.\n\n**Current Tickets:** ${currentTicketCount}/${maxTicketsPerUser}` });
       }
       
       const modal = new ModalBuilder()
@@ -137,7 +137,7 @@ const createTicketHandler = {
 
       await interaction.showModal(modal);
     } catch (error) {
-      logger.error('Error creating ticket modal:', error);
+      logger.error('Error creating order modal:', error);
       if (!interaction.replied && !interaction.deferred) {
         await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Could not open order creation form.' });
       }
@@ -173,11 +173,11 @@ const createTicketModalHandler = {
           )]
         });
       } else {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to create ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to create order.' });
       }
     } catch (error) {
       logger.error('Error creating ticket:', error);
-      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while creating your ticket.' });
+      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while creating your order.' });
     }
   }
 };
@@ -191,7 +191,7 @@ const closeTicketHandler = {
       const permissionCheck = await checkTicketPermissionWithTimeout(
         interaction,
         client,
-        'close this ticket',
+        'close this order',
         { allowTicketCreator: true },
         2000 
       );
@@ -203,13 +203,13 @@ const closeTicketHandler = {
 
       const modal = new ModalBuilder()
         .setCustomId('ticket_close_modal')
-        .setTitle('Close Ticket');
+        .setTitle('Close Order');
 
       const reasonInput = new TextInputBuilder()
         .setCustomId('reason')
         .setLabel('Reason for closing (optional)')
         .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Add an optional reason for closing this ticket...')
+        .setPlaceholder('Add an optional reason for closing this order...')
         .setRequired(false)
         .setMaxLength(1000);
 
@@ -218,7 +218,7 @@ const closeTicketHandler = {
 
       await interaction.showModal(modal);
     } catch (error) {
-      logger.error('Error closing ticket:', error);
+      logger.error('Error closing order:', error);
 
       if (!interaction.replied && !interaction.deferred) {
         await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Could not open prder close form.' });
@@ -236,7 +236,7 @@ const closeTicketModalHandler = {
       const permissionCheck = await checkTicketPermissionWithTimeout(
         interaction,
         client,
-        'close this ticket',
+        'close this order',
         { allowTicketCreator: true },
         2000
       );
@@ -260,14 +260,14 @@ const closeTicketModalHandler = {
           flags: MessageFlags.Ephemeral
         });
       } else {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to close ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to close order.' });
       }
     } catch (error) {
       logger.error('Error submitting close order modal:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while closing the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while closing the order.' });
       } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while closing the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while closing the order.' });
       }
     }
   }
@@ -282,7 +282,7 @@ const claimTicketHandler = {
       const permissionCheck = await checkTicketPermissionWithTimeout(
         interaction,
         client,
-        'claim tickets',
+        'claim orders',
         {},
         2000
       );
@@ -299,18 +299,18 @@ const claimTicketHandler = {
       
       if (result.success) {
         await interaction.editReply({
-          embeds: [successEmbed('Order Claimed', 'You have successfully claimed this ticket!')],
+          embeds: [successEmbed('Order Claimed', 'You have successfully claimed this order!')],
           flags: MessageFlags.Ephemeral
         });
       } else {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to claim ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to claim order.' });
       }
     } catch (error) {
-      logger.error('Error claiming ticket:', error);
+      logger.error('Error claiming order:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while claiming the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while claiming the order.' });
       } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while claiming the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while claiming the order.' });
       }
     }
   }
@@ -374,7 +374,7 @@ const pinTicketHandler = {
       const permissionCheck = await checkTicketPermissionWithTimeout(
         interaction,
         client,
-        'pin tickets',
+        'pin orders',
         {},
         2000
       );
@@ -464,9 +464,9 @@ const pinTicketHandler = {
     } catch (error) {
       logger.error('Error pinning/unpinning ticket:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to pin/unpin the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to pin/unpin the order.' });
       } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to pin/unpin the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to pin/unpin the order.' });
       }
     }
   }
@@ -481,7 +481,7 @@ const unclaimTicketHandler = {
       const permissionCheck = await checkTicketPermissionWithTimeout(
         interaction,
         client,
-        'unclaim tickets',
+        'unclaim orders',
         {},
         2000
       );
@@ -499,18 +499,18 @@ const unclaimTicketHandler = {
       
       if (result.success) {
         await interaction.editReply({
-          embeds: [successEmbed('Order Unclaimed', 'You have successfully unclaimed this ticket!')],
+          embeds: [successEmbed('Order Unclaimed', 'You have successfully unclaimed this order!')],
           flags: MessageFlags.Ephemeral
         });
       } else {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to unclaim ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to unclaim order.' });
       }
     } catch (error) {
       logger.error('Error unclaiming ticket:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while unclaiming the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while unclaiming the order.' });
       } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while unclaiming the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while unclaiming the order.' });
       }
     }
   }
@@ -525,7 +525,7 @@ const reopenTicketHandler = {
       const permissionCheck = await checkTicketPermissionWithTimeout(
         interaction,
         client,
-        'reopen tickets',
+        'reopen orders',
         {},
         2000
       );
@@ -542,7 +542,7 @@ const reopenTicketHandler = {
       const result = await reopenTicket(interaction.channel, interaction.member);
       
       if (result.success) {
-        let reopenMessage = 'You have successfully reopened this ticket!';
+        let reopenMessage = 'You have successfully reopened this order!';
         if (result.openCategoryMoveFailed) {
           reopenMessage += '\n\n⚠️ The order was reopened, but it could not be moved to the configured open order category.';
         }
@@ -552,14 +552,14 @@ const reopenTicketHandler = {
           flags: MessageFlags.Ephemeral
         });
       } else {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to reopen ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to reopen order.' });
       }
     } catch (error) {
       logger.error('Error reopening ticket:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while reopening the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while reopening the order.' });
       } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while reopening the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while reopening the order.' });
       }
     }
   }
@@ -574,7 +574,7 @@ const deleteTicketHandler = {
       const permissionCheck = await checkTicketPermissionWithTimeout(
         interaction,
         client,
-        'delete tickets',
+        'delete orders',
         {},
         2000
       );
@@ -596,14 +596,14 @@ const deleteTicketHandler = {
           flags: MessageFlags.Ephemeral
         });
       } else {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to delete ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to delete order.' });
       }
     } catch (error) {
       logger.error('Error deleting ticket:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while deleting the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while deleting the order.' });
       } else if (interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while deleting the ticket.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while deleting the order.' });
       }
     }
   }
