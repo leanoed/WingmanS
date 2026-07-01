@@ -54,7 +54,7 @@ async function checkTicketPermissionWithTimeout(interaction, client, actionLabel
     const context = await Promise.race([contextPromise, timeoutPromise]);
 
     if (!context.ticketData) {
-      return { success: false, error: 'Not a Ticket Channel', details: 'This action can only be used in a valid ticket channel.' };
+      return { success: false, error: 'Not a Order Channel', details: 'This action can only be used in a valid order channel.' };
     }
 
     const allowed = allowTicketCreator ? context.canCloseTicket : context.canManageTicket;
@@ -122,7 +122,7 @@ const createTicketHandler = {
       
       const modal = new ModalBuilder()
         .setCustomId('create_ticket_modal')
-        .setTitle('Create a Request');
+        .setTitle('Create a Order');
 
       const reasonInput = new TextInputBuilder()
         .setCustomId('reason')
@@ -139,7 +139,7 @@ const createTicketHandler = {
     } catch (error) {
       logger.error('Error creating ticket modal:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Could not open ticket creation form.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Could not open order creation form.' });
       }
     }
   }
@@ -168,8 +168,8 @@ const createTicketModalHandler = {
       if (result.success) {
         await interaction.editReply({
           embeds: [successEmbed(
-            'Ticket Created',
-            `Your ticket has been created in ${result.channel}!`
+            'Order Created',
+            `Your order has been created in ${result.channel}!`
           )]
         });
       } else {
@@ -221,7 +221,7 @@ const closeTicketHandler = {
       logger.error('Error closing ticket:', error);
 
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Could not open ticket close form.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Could not open prder close form.' });
       }
     }
   }
@@ -250,20 +250,20 @@ const closeTicketModalHandler = {
       if (!deferSuccess) return;
 
       const providedReason = interaction.fields.getTextInputValue('reason')?.trim();
-      const reason = providedReason || 'Closed via ticket button without a specific reason.';
+      const reason = providedReason || 'Closed via order button without a specific reason.';
 
       const result = await closeTicket(interaction.channel, interaction.user, reason);
 
       if (result.success) {
         await interaction.editReply({
-          embeds: [successEmbed('Ticket Closed', 'This ticket has been closed.')],
+          embeds: [successEmbed('Order Closed', 'This order has been closed.')],
           flags: MessageFlags.Ephemeral
         });
       } else {
         await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to close ticket.' });
       }
     } catch (error) {
-      logger.error('Error submitting close ticket modal:', error);
+      logger.error('Error submitting close order modal:', error);
       if (!interaction.replied && !interaction.deferred) {
         await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while closing the ticket.' });
       } else if (interaction.deferred) {
@@ -299,7 +299,7 @@ const claimTicketHandler = {
       
       if (result.success) {
         await interaction.editReply({
-          embeds: [successEmbed('Ticket Claimed', 'You have successfully claimed this ticket!')],
+          embeds: [successEmbed('Order Claimed', 'You have successfully claimed this ticket!')],
           flags: MessageFlags.Ephemeral
         });
       } else {
@@ -325,7 +325,7 @@ const priorityTicketHandler = {
       const permissionCheck = await checkTicketPermissionWithTimeout(
         interaction,
         client,
-        'change ticket priority',
+        'change order priority',
         {},
         2000
       );
@@ -348,14 +348,14 @@ const priorityTicketHandler = {
       
       if (result.success) {
         await interaction.editReply({
-          embeds: [successEmbed('Priority Updated', `Ticket priority set to ${priority}.`)],
+          embeds: [successEmbed('Priority Updated', `Order priority set to ${priority}.`)],
           flags: MessageFlags.Ephemeral
         });
       } else {
         await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Failed to update priority.' });
       }
     } catch (error) {
-      logger.error('Error updating ticket priority:', error);
+      logger.error('Error updating order priority:', error);
       if (!interaction.replied && !interaction.deferred) {
         await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while updating the priority.' });
       } else if (interaction.deferred) {
@@ -391,7 +391,7 @@ const pinTicketHandler = {
       const category = channel.parent;
 
       if (!category) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This ticket is not in a category.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This order is not in a category.' });
         return;
       }
 
@@ -407,14 +407,14 @@ const pinTicketHandler = {
 
         await interaction.editReply({
           embeds: [createEmbed({
-            title: '📌 Ticket Unpinned',
-            description: 'This ticket has been unpinned and moved back to normal position.',
+            title: '📌 Order Unpinned',
+            description: 'This order has been unpinned and moved back to normal position.',
             color: 0x95A5A6
           })],
           flags: MessageFlags.Ephemeral
         });
 
-        logger.info('Ticket unpinned', {
+        logger.info('Order unpinned', {
           guildId: interaction.guildId,
           channelId: channel.id,
           channelName: newName,
@@ -430,14 +430,14 @@ const pinTicketHandler = {
 
         await interaction.editReply({
           embeds: [createEmbed({
-            title: '📌 Ticket Pinned',
-            description: 'This ticket has been pinned to the top of the category.',
+            title: '📌 Order Pinned',
+            description: 'This order has been pinned to the top of the category.',
             color: 0x3498db
           })],
           flags: MessageFlags.Ephemeral
         });
 
-        logger.info('Ticket pinned', {
+        logger.info('Order pinned', {
           guildId: interaction.guildId,
           channelId: channel.id,
           channelName: pinnedName,
@@ -499,7 +499,7 @@ const unclaimTicketHandler = {
       
       if (result.success) {
         await interaction.editReply({
-          embeds: [successEmbed('Ticket Unclaimed', 'You have successfully unclaimed this ticket!')],
+          embeds: [successEmbed('Order Unclaimed', 'You have successfully unclaimed this ticket!')],
           flags: MessageFlags.Ephemeral
         });
       } else {
@@ -544,11 +544,11 @@ const reopenTicketHandler = {
       if (result.success) {
         let reopenMessage = 'You have successfully reopened this ticket!';
         if (result.openCategoryMoveFailed) {
-          reopenMessage += '\n\n⚠️ The ticket was reopened, but it could not be moved to the configured open ticket category.';
+          reopenMessage += '\n\n⚠️ The order was reopened, but it could not be moved to the configured open order category.';
         }
 
         await interaction.editReply({
-          embeds: [successEmbed('Ticket Reopened', reopenMessage)],
+          embeds: [successEmbed('Order Reopened', reopenMessage)],
           flags: MessageFlags.Ephemeral
         });
       } else {
@@ -592,7 +592,7 @@ const deleteTicketHandler = {
       
       if (result.success) {
         await interaction.editReply({
-          embeds: [successEmbed('Ticket Deleted', 'This ticket will be permanently deleted in 3 seconds.')],
+          embeds: [successEmbed('Order Deleted', 'This order will be permanently deleted in 3 seconds.')],
           flags: MessageFlags.Ephemeral
         });
       } else {
