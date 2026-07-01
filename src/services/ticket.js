@@ -98,7 +98,7 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     
     const ticketNumber = await getNextTicketNumber(guild.id);
     
-    let channelName = `ticket-${ticketNumber}`;
+    let channelName = `request-${ticketNumber}`;
     
     if (priority !== 'none') {
       const priorityInfo = PRIORITY_MAP[priority];
@@ -386,7 +386,7 @@ components: []
         .setEmoji('🔓'),
       new ButtonBuilder()
         .setCustomId('ticket_delete')
-        .setLabel('Delete Ticket')
+        .setLabel('Delete Request')
         .setStyle(ButtonStyle.Danger)
         .setEmoji('🗑️')
     );
@@ -744,7 +744,7 @@ ${rows}
 </html>`;
 
     const buffer = Buffer.from(html, 'utf8');
-    const attachment = new AttachmentBuilder(buffer, { name: `ticket-${channel.id}.html` });
+    const attachment = new AttachmentBuilder(buffer, { name: `request-${channel.id}.html` });
 
     logger.info('✅ Successfully generated transcript', {
       channelId: channel.id,
@@ -885,14 +885,14 @@ export async function deleteTicket(channel, deleter) {
         }
 
         try {
-          await channel.delete('Ticket deleted permanently');
+          await channel.delete('Request deleted permanently');
           logger.info('✅ Channel deleted', {
             channelId: channel.id,
             channelName: channel.name,
             ticketNumber: ticketData.id
           });
         } catch (deleteError) {
-          logger.error('❌ Failed to delete ticket channel:', {
+          logger.error('❌ Failed to delete request channel:', {
             channelId: channel.id,
             channelName: channel.name,
             ticketNumber: ticketData.id,
@@ -920,7 +920,7 @@ export async function deleteTicket(channel, deleter) {
       service: 'ticketService',
       operation: 'deleteTicket',
       message: 'Ticket operation failed: deleteTicket',
-      userMessage: 'Failed to delete ticket. Please try again in a moment.',
+      userMessage: 'Failed to delete request. Please try again in a moment.',
       context: { guildId: channel?.guild?.id, channelId: channel?.id, deleterId: deleter?.id }
     });
     logger.error('Error deleting ticket:', {
