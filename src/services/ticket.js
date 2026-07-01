@@ -47,7 +47,7 @@ export async function getUserTicketCount(guildId, userId) {
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'getUserTicketCount',
-      message: 'Request operation failed: getUserTicketCount',
+      message: 'Order operation failed: getUserTicketCount',
       userMessage: 'Failed to count open tickets.',
       context: { guildId, userId }
     });
@@ -85,7 +85,7 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     
     if (!category && !categoryId) {
       category = await guild.channels.create({
-        name: 'Tickets',
+        name: 'Orders',
         type: ChannelType.GuildCategory,
         permissionOverwrites: [
           {
@@ -98,7 +98,7 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     
     const ticketNumber = await getNextTicketNumber(guild.id);
     
-    let channelName = `request-${ticketNumber}`;
+    let channelName = `order-${ticketNumber}`;
     
     if (priority !== 'none') {
       const priorityInfo = PRIORITY_MAP[priority];
@@ -153,8 +153,8 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     const priorityInfo = PRIORITY_MAP[priority] || PRIORITY_MAP.none;
     
     const embed = createEmbed({
-      title: `Request #${ticketNumber}`,
-      description: `${member.toString()}, thanks for your request!\n\n**Text:**\n${reason}\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
+      title: `Order #${ticketNumber}`,
+      description: `${member.toString()}, thanks for your order!\n\n**Text:**\n${reason}\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
       color: priorityInfo.color,
       fields: [
         { name: 'Status', value: '🟢 Open', inline: true },
@@ -215,11 +215,11 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'createTicket',
-      message: 'Ticket operation failed: createTicket',
-      userMessage: 'Failed to create ticket. Please try again in a moment.',
+      message: 'Order operation failed: createTicket',
+      userMessage: 'Failed to create order. Please try again in a moment.',
       context: { guildId: guild?.id, userId: member?.id }
     });
-    logger.error('Error creating ticket:', {
+    logger.error('Error creating order:', {
       guildId: guild?.id,
       userId: member?.id,
       error: typedError.message,
@@ -237,7 +237,7 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
   try {
     const ticketData = await getTicketData(channel.guild.id, channel.id);
     if (!ticketData) {
-      return { success: false, error: 'This is not a ticket channel' };
+      return { success: false, error: 'This is not a order channel' };
     }
     
     const config = await getGuildConfig(channel.client, channel.guild.id);
@@ -273,17 +273,17 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
         const ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
         if (ticketCreator) {
           const dmEmbed = createEmbed({
-            title: '🎫 Your Ticket Has Been Closed',
-            description: `Your ticket **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nThank you for using our support system! If you have any further questions, feel free to create a new ticket.`,
+            title: '🎫 Your Order Has Been Closed',
+            description: `Your order **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nThank you for using our system! If you have any plans, feel free to create a new order.`,
             color: '#e74c3c',
-            footer: { text: `Ticket ID: ${ticketData.id}` }
+            footer: { text: `Order ID: ${ticketData.id}` }
           });
 
           await ticketCreator.send({ embeds: [dmEmbed] });
 
           try {
             const feedbackEmbed = createEmbed({
-              title: '⭐ How was your support experience?',
+              title: '⭐ How was your ordor experience?',
               description: `We'd love to know how we did with **${channel.name}**.\nSelect a rating below — it only takes a second!`,
               color: '#F1C40F',
               footer: { text: 'Your feedback helps us improve.' },
@@ -313,11 +313,11 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
               components: [starsRow, declineRow],
             });
           } catch (feedbackError) {
-            logger.warn(`Could not send feedback survey to ticket creator ${ticketData.userId}: ${feedbackError.message}`);
+            logger.warn(`Could not send feedback survey to order creator ${ticketData.userId}: ${feedbackError.message}`);
           }
         }
       } catch (dmError) {
-          logger.warn(`Could not send DM to ticket creator ${ticketData.userId}: ${dmError.message}`);
+          logger.warn(`Could not send DM to order creator ${ticketData.userId}: ${dmError.message}`);
       }
     }
     
@@ -340,13 +340,13 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
         }
       }
     } catch (permError) {
-        logger.warn(`Could not update user permissions for closed ticket: ${permError.message}`);
+        logger.warn(`Could not update user permissions for closed order: ${permError.message}`);
     }
     
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Request #')
+      m.embeds[0].title?.startsWith('Order #')
     );
     
     if (ticketMessage) {
@@ -358,8 +358,8 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       }
       
       const updatedEmbed = createEmbed({
-        title: embed.title || 'Ticket',
-        description: embed.description || 'Ticket discussion',
+        title: embed.title || 'Order',
+        description: embed.description || 'Order discussion',
         color: '#e74c3c',
         fields: embed.fields || [],
         footer: embed.footer
@@ -372,21 +372,21 @@ components: []
     }
     
     const closeEmbed = createEmbed({
-      title: 'Request Closed',
-      description: `This request has been closed by ${closer}.\n**Reason:** ${reason}${dmOnClose ? '\n\n📩 A DM has been sent to the request creator.' : ''}`,
+      title: 'Order Closed',
+      description: `This order has been closed by ${closer}.\n**Reason:** ${reason}${dmOnClose ? '\n\n📩 A DM has been sent to the order creator.' : ''}`,
       color: '#e74c3c',
-      footer: { text: `Ticket ID: ${ticketData.id}` }
+      footer: { text: `Order ID: ${ticketData.id}` }
     });
     
     const controlRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('ticket_reopen')
-        .setLabel('Reopen Request')
+        .setLabel('Reopen Order')
         .setStyle(ButtonStyle.Success)
         .setEmoji('🔓'),
       new ButtonBuilder()
         .setCustomId('ticket_delete')
-        .setLabel('Delete Request')
+        .setLabel('Delete Order')
         .setStyle(ButtonStyle.Danger)
         .setEmoji('🗑️')
     );
@@ -417,11 +417,11 @@ components: []
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'closeTicket',
-      message: 'Ticket operation failed: closeTicket',
-      userMessage: 'Failed to close ticket. Please try again in a moment.',
+      message: 'Order operation failed: closeTicket',
+      userMessage: 'Failed to close order. Please try again in a moment.',
       context: { guildId: channel?.guild?.id, channelId: channel?.id, closerId: closer?.id }
     });
-    logger.error('Error closing ticket:', {
+    logger.error('Error closing order:', {
       guildId: channel?.guild?.id,
       channelId: channel?.id,
       userId: closer?.id,
@@ -440,13 +440,13 @@ export async function claimTicket(channel, claimer) {
   try {
     const ticketData = await getTicketData(channel.guild.id, channel.id);
     if (!ticketData) {
-      return { success: false, error: 'This is not a ticket channel' };
+      return { success: false, error: 'This is not a order channel' };
     }
     
     if (ticketData.claimedBy) {
       return { 
         success: false, 
-        error: `This ticket is already claimed by <@${ticketData.claimedBy}>` 
+        error: `This order is already claimed by <@${ticketData.claimedBy}>` 
       };
     }
     
@@ -458,7 +458,7 @@ export async function claimTicket(channel, claimer) {
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Request #')
+      m.embeds[0].title?.startsWith('Order #')
     );
     
     if (ticketMessage) {
@@ -478,8 +478,8 @@ export async function claimTicket(channel, claimer) {
     }
     
     const claimEmbed = createEmbed({
-      title: 'Ticket Claimed',
-      description: `🎉 ${claimer} has claimed this request!`,
+      title: 'Order Claimed',
+      description: `🎉 ${claimer} has claimed this order!`,
       color: '#2ecc71'
     });
     
@@ -493,7 +493,7 @@ export async function claimTicket(channel, claimer) {
 
     const claimStatusMessage = messages.find(m =>
       m.embeds.length > 0 &&
-      (m.embeds[0].title === 'Ticket Claimed' || m.embeds[0].title === 'Ticket Unclaimed')
+      (m.embeds[0].title === 'Order Claimed' || m.embeds[0].title === 'Order Unclaimed')
     );
 
     if (claimStatusMessage) {
@@ -523,8 +523,8 @@ export async function claimTicket(channel, claimer) {
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'claimTicket',
-      message: 'Ticket operation failed: claimTicket',
-      userMessage: 'Failed to claim ticket. Please try again in a moment.',
+      message: 'Order operation failed: claimTicket',
+      userMessage: 'Failed to claim order. Please try again in a moment.',
       context: { guildId: channel?.guild?.id, channelId: channel?.id, claimerId: claimer?.id }
     });
     logger.error('Error claiming ticket:', {
@@ -578,11 +578,11 @@ export async function reopenTicket(channel, reopener) {
           movedToOpenCategory = true;
         } catch (moveError) {
           openCategoryMoveFailed = true;
-          logger.warn(`Could not move reopened request ${channel.id} to open category ${openCategoryId}: ${moveError.message}`);
+          logger.warn(`Could not move reopened order ${channel.id} to open category ${openCategoryId}: ${moveError.message}`);
         }
       } else {
         openCategoryMoveFailed = true;
-        logger.warn(`Configured open ticket category is invalid for guild ${channel.guild.id}: ${openCategoryId}`);
+        logger.warn(`Configured open order category is invalid for guild ${channel.guild.id}: ${openCategoryId}`);
       }
     }
     
@@ -603,7 +603,7 @@ export async function reopenTicket(channel, reopener) {
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Request #')
+      m.embeds[0].title?.startsWith('Order #')
     );
     
     if (ticketMessage) {
@@ -623,14 +623,14 @@ export async function reopenTicket(channel, reopener) {
     }
     
     const reopenEmbed = createEmbed({
-      title: 'Request Reopened',
-      description: `🔓 ${reopener} has reopened this request!`,
+      title: 'Order Reopened',
+      description: `🔓 ${reopener} has reopened this order!`,
       color: '#2ecc71'
     });
 
     const closeStatusMessage = messages.find(m =>
       m.embeds.length > 0 &&
-      m.embeds[0].title === 'Request Closed' &&
+      m.embeds[0].title === 'Order Closed' &&
       m.components.length > 0 &&
       m.components[0].components.some(c => c.customId === 'ticket_reopen')
     );
@@ -652,11 +652,11 @@ export async function reopenTicket(channel, reopener) {
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'reopenTicket',
-      message: 'Ticket operation failed: reopenTicket',
-      userMessage: 'Failed to reopen ticket. Please try again in a moment.',
+      message: 'Order operation failed: reopenTicket',
+      userMessage: 'Failed to reopen order. Please try again in a moment.',
       context: { guildId: channel?.guild?.id, channelId: channel?.id, reopenerId: reopener?.id }
     });
-    logger.error('Error reopening ticket:', {
+    logger.error('Error reopening order:', {
       guildId: channel?.guild?.id,
       channelId: channel?.id,
       userId: reopener?.id,
@@ -744,7 +744,7 @@ ${rows}
 </html>`;
 
     const buffer = Buffer.from(html, 'utf8');
-    const attachment = new AttachmentBuilder(buffer, { name: `request-${channel.id}.html` });
+    const attachment = new AttachmentBuilder(buffer, { name: `order-${channel.id}.html` });
 
     logger.info('✅ Successfully generated transcript', {
       channelId: channel.id,
@@ -774,10 +774,10 @@ export async function deleteTicket(channel, deleter) {
     }
     
     const deleteEmbed = createEmbed({
-      title: 'Ticket Deleted',
-      description: `🗑️ This ticket will be permanently deleted in ${TICKET_DELETE_DELAY_SECONDS} seconds.`,
+      title: 'Order Deleted',
+      description: `🗑️ This order will be permanently deleted in ${TICKET_DELETE_DELAY_SECONDS} seconds.`,
       color: '#e74c3c',
-      footer: { text: `Ticket ID: ${ticketData.id}` }
+      footer: { text: `Order ID: ${ticketData.id}` }
     });
     
     await channel.send({ embeds: [deleteEmbed] });
@@ -851,7 +851,7 @@ export async function deleteTicket(channel, deleter) {
                 
                 const transcriptEmbed = buildStandardLogEmbed({
                   color: 0x3498db,
-                  title: 'Ticket Transcript',
+                  title: 'Order Transcript',
                   description: [
                     formatLogLine('Ticket', `#${ticketData.id}`),
                     formatLogLine('Channel', `#${channel.name}`),
@@ -885,14 +885,14 @@ export async function deleteTicket(channel, deleter) {
         }
 
         try {
-          await channel.delete('Request deleted permanently');
+          await channel.delete('Order deleted permanently');
           logger.info('✅ Channel deleted', {
             channelId: channel.id,
             channelName: channel.name,
             ticketNumber: ticketData.id
           });
         } catch (deleteError) {
-          logger.error('❌ Failed to delete request channel:', {
+          logger.error('❌ Failed to delete order channel:', {
             channelId: channel.id,
             channelName: channel.name,
             ticketNumber: ticketData.id,
@@ -902,7 +902,7 @@ export async function deleteTicket(channel, deleter) {
           });
         }
       } catch (error) {
-        logger.error('❌ Unexpected error during ticket deletion:', {
+        logger.error('❌ Unexpected error during order deletion:', {
           channelId: channel.id,
           channelName: channel?.name,
           ticketNumber: ticketData?.id,
@@ -919,11 +919,11 @@ export async function deleteTicket(channel, deleter) {
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'deleteTicket',
-      message: 'Ticket operation failed: deleteTicket',
-      userMessage: 'Failed to delete request. Please try again in a moment.',
+      message: 'Order operation failed: deleteTicket',
+      userMessage: 'Failed to delete order. Please try again in a moment.',
       context: { guildId: channel?.guild?.id, channelId: channel?.id, deleterId: deleter?.id }
     });
-    logger.error('Error deleting ticket:', {
+    logger.error('Error deleting order:', {
       guildId: channel?.guild?.id,
       channelId: channel?.id,
       userId: deleter?.id,
@@ -948,14 +948,14 @@ export async function unclaimTicket(channel, unclaimer) {
     if (!ticketData.claimedBy) {
       return { 
         success: false, 
-        error: 'This ticket is not currently claimed' 
+        error: 'This order is not currently claimed' 
       };
     }
     
     if (ticketData.claimedBy !== unclaimer.id && !unclaimer.permissions.has(PermissionFlagsBits.ManageChannels)) {
       return { 
         success: false, 
-        error: 'You can only unclaim your own tickets or need Manage Channels permission.' 
+        error: 'You can only unclaim your own orders or need Manage Channels permission.' 
       };
     }
     
@@ -968,7 +968,7 @@ export async function unclaimTicket(channel, unclaimer) {
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Request #')
+      m.embeds[0].title?.startsWith('Order #')
     );
     
     if (ticketMessage) {
@@ -989,13 +989,13 @@ export async function unclaimTicket(channel, unclaimer) {
     
     const claimMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      (m.embeds[0].title === 'Ticket Claimed' || m.embeds[0].title === 'Ticket Unclaimed')
+      (m.embeds[0].title === 'Order Claimed' || m.embeds[0].title === 'Order Unclaimed')
     );
     
     if (claimMessage) {
       const unclaimEmbed = createEmbed({
-        title: 'Ticket Unclaimed',
-        description: `🔓 ${unclaimer} has unclaimed this ticket!`,
+        title: 'Order Unclaimed',
+        description: `🔓 ${unclaimer} has unclaimed this order!`,
         color: '#f39c12'
       });
       
@@ -1005,8 +1005,8 @@ export async function unclaimTicket(channel, unclaimer) {
       });
     } else {
       const unclaimEmbed = createEmbed({
-        title: 'Ticket Unclaimed',
-        description: `🔓 ${unclaimer} has unclaimed this ticket!`,
+        title: 'Order Unclaimed',
+        description: `🔓 ${unclaimer} has unclaimed this order!`,
         color: '#f39c12'
       });
       
@@ -1034,11 +1034,11 @@ export async function unclaimTicket(channel, unclaimer) {
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'unclaimTicket',
-      message: 'Ticket operation failed: unclaimTicket',
+      message: 'Order operation failed: unclaimTicket',
       userMessage: 'Failed to unclaim ticket. Please try again in a moment.',
       context: { guildId: channel?.guild?.id, channelId: channel?.id, unclaimerId: unclaimer?.id }
     });
-    logger.error('Error unclaiming ticket:', {
+    logger.error('Error unclaiming order:', {
       guildId: channel?.guild?.id,
       channelId: channel?.id,
       userId: unclaimer?.id,
@@ -1061,7 +1061,7 @@ export async function updateTicketPriority(channel, priority, updater) {
   try {
     const ticketData = await getTicketData(channel.guild.id, channel.id);
     if (!ticketData) {
-      return { success: false, error: 'This is not a ticket channel' };
+      return { success: false, error: 'This is not a order channel' };
     }
     
     const priorityInfo = PRIORITY_MAP[priority];
@@ -1094,14 +1094,14 @@ export async function updateTicketPriority(channel, priority, updater) {
     const messages = await channel.messages.fetch();
     const ticketMessage = messages.find(m => 
       m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Request #')
+      m.embeds[0].title?.startsWith('Order #')
     );
     
     if (ticketMessage) {
       const embed = ticketMessage.embeds[0];
       
       const updatedEmbed = createEmbed({
-        title: embed.title || 'Ticket',
+        title: embed.title || 'Order',
         description: embed.description?.split('\n**Priority:**')[0] + `\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
         color: priorityInfo.color,
         fields: embed.fields || [],
@@ -1113,7 +1113,7 @@ export async function updateTicketPriority(channel, priority, updater) {
     
     const updateEmbed = createEmbed({
       title: 'Priority Updated',
-      description: `📊 Ticket priority updated to **${priorityInfo.emoji} ${priorityInfo.label}** by ${updater}`,
+      description: `📊 Order priority updated to **${priorityInfo.emoji} ${priorityInfo.label}** by ${updater}`,
       color: priorityInfo.color
     });
     
@@ -1142,11 +1142,11 @@ export async function updateTicketPriority(channel, priority, updater) {
     const typedError = ensureTypedServiceError(error, {
       service: 'ticketService',
       operation: 'updateTicketPriority',
-      message: 'Ticket operation failed: updateTicketPriority',
-      userMessage: 'Failed to update ticket priority. Please try again in a moment.',
+      message: 'Order operation failed: updateTicketPriority',
+      userMessage: 'Failed to update order priority. Please try again in a moment.',
       context: { guildId: channel?.guild?.id, channelId: channel?.id, updaterId: updater?.id, priority }
     });
-    logger.error('Error updating ticket priority:', {
+    logger.error('Error updating order priority:', {
       guildId: channel?.guild?.id,
       channelId: channel?.id,
       userId: updater?.id,
